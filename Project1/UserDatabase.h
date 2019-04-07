@@ -24,6 +24,34 @@ private:
 	class User
 	{
 	public:
+		User(std::string name, std::string discordID)
+			:
+			name(name),
+			discordID(discordID),
+			availability((int)dayIndex::nCount, false),
+			isAdmin(false)
+		{}
+		User(std::string name, std::string discordID, bool isAdmin, std::vector<bool> availability)
+			:
+			name(name),
+			discordID(discordID),
+			availability(availability),
+			isAdmin(isAdmin)
+		{}
+		User(User&& u)
+		{
+			*this = std::move(u);
+		}
+		User& operator=(User&& rhs) 
+		{
+			name = std::move(rhs.name);
+			discordID = std::move(rhs.discordID);
+			isAdmin = rhs.isAdmin;
+			availability = rhs.availability;
+			return *this;
+		}
+		~User() noexcept {}
+	public:
 		bool isAdmin = false;
 		std::string name;
 		std::string discordID;
@@ -32,7 +60,7 @@ private:
 
 public:
 	UserDatabase();
-	~UserDatabase();
+	~UserDatabase() noexcept;
 
 public:
 	bool changeAvailability(const std::string& discordID, dayIndex day, bool isAvailable);
@@ -40,13 +68,16 @@ public:
 
 	bool isUser(const std::string& discordID) const;
 	bool isAdmin(const std::string& discordID) const;
-	bool loadFile() const;
-	bool saveFile();
+	bool addUser(const std::string& pingedUserInput);
+	bool removeUser(const std::string& pingedUserInput);
 
+private:
+	void loadFile(const std::string& filename);
 	void reset();
+	void add(User&& user);
+	void remove(User&& user);
 
 private:
 	std::vector<User> user;
-	std::fstream userList;
 };
 

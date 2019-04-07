@@ -3,6 +3,7 @@
 #include <sleepy_discord/websocketpp_websocket.h>
 
 #include "MessageParser.h"
+#include "UserDatabase.h"
 
 class BotClient : public SleepyDiscord::DiscordClient 
 {
@@ -14,4 +15,5 @@ public:
 
 private:
 	MessageParser parser;
+	UserDatabase userDatabase;
 };
