@@ -147,9 +147,13 @@
   <ItemGroup>
     <ClCompile Include="Botclient.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MessageParser.cpp" />
+    <ClCompile Include="UserDatabase.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Botclient.h" />
+    <ClInclude Include="MessageParser.h" />
+    <ClInclude Include="UserDatabase.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

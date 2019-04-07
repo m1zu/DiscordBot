@@ -8,26 +8,20 @@
 #include <fstream>
 #include <exception>
 
-int main(int argc, char** argv) 
+int main() 
 {
-	if (argc != 2)
-	{
-		std::cout << "Usage of executable:\n ./executable  path/to/tokenfile" << std::endl;
-		return -1;
-	}
-
 	try
 	{
-		std::string tokenFileName(argv[1]);
-		std::ifstream tokenFile(tokenFileName, std::ios_base::binary);
-		if (!tokenFile)
-			throw std::runtime_error("Could not load tokenfile: " + tokenFileName);
-
 		std::string token;
-		tokenFile >> token;
-		if (!tokenFile)
-			throw std::runtime_error("Cannot read token from file: " + tokenFileName);
+		{
+			std::ifstream tokenFile("token.txt", std::ios_base::binary);
+			if (!tokenFile)
+				throw std::runtime_error("Cannot load tokenfile!");
 
+			tokenFile >> token;
+			if (!tokenFile)
+				throw std::runtime_error("Cannot read token from file: File is emtpy?");
+		}
 		BotClient client(token, 2);
 		client.run();
 	}
@@ -40,5 +34,6 @@ int main(int argc, char** argv)
 	catch (...)
 	{
 		std::cerr << "Catched some unidentified exception in main()!";
+		return -1;
 	}
 }

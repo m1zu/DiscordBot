@@ -2,9 +2,16 @@
 
 #include <sleepy_discord/websocketpp_websocket.h>
 
-class BotClient : public SleepyDiscord::DiscordClient {
-public:
+#include "MessageParser.h"
+
+class BotClient : public SleepyDiscord::DiscordClient 
+{
 	using SleepyDiscord::DiscordClient::DiscordClient;
 
-	void onMessage(SleepyDiscord::Message message);
+public:
+	void onMessage(SleepyDiscord::Message message) override;
+	void sendMessage(SleepyDiscord::Snowflake<SleepyDiscord::Channel> channelID, std::string message);
+
+private:
+	MessageParser parser;
 };
