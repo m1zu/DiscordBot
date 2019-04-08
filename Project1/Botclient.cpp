@@ -13,7 +13,7 @@ void BotClient::onMessage(SleepyDiscord::Message message)
 	// Message Parser
 	try
 	{
-		MessageParser::Reply reply = parser.parseMessage(message);
+		MessageParser::Reply reply = parser.parseMessage(message, userDatabase);
 		if(reply.hasToSaySomething)
 			SleepyDiscord::DiscordClient::sendMessage(message.channelID, reply.answer);
 

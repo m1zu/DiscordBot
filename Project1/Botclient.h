@@ -14,6 +14,6 @@ public:
 	void sendMessage(SleepyDiscord::Snowflake<SleepyDiscord::Channel> channelID, std::string message);
 
 private:
-	MessageParser parser;
 	UserDatabase userDatabase;
+	MessageParser parser;
 };
