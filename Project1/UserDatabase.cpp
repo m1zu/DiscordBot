@@ -178,10 +178,9 @@ void UserDatabase::loadFile()
 
 void UserDatabase::reset()
 {
-	// TEST THIS
 	for (auto it = user.begin(), e = user.end(); it != e; ++it)
 	{
-		it->availability.clear();
+		it->availability = std::vector<availableIndex>(dayIndex::nCount, availableIndex::notFilled);
 	}
 	syncWithFile();
 }
