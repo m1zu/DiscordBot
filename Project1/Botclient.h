@@ -11,7 +11,6 @@ class BotClient : public SleepyDiscord::DiscordClient
 
 public:
 	void onMessage(SleepyDiscord::Message message) override;
-	void sendMessage(SleepyDiscord::Snowflake<SleepyDiscord::Channel> channelID, std::string message);
 
 private:
 	UserDatabase userDatabase;

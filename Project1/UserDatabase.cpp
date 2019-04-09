@@ -34,14 +34,36 @@ std::string extendString(std::string s, unsigned int t)
 	return s;
 }
 
-bool UserDatabase::changeAvailability_day(const std::string & discordID, dayIndex day, bool isAvailable)
+bool UserDatabase::changeAvailability_day(const std::string & discordID, dayIndex day, availableIndex status)
 {
-	return false;
+	auto it = std::find_if(user.begin(), user.end(), [&](const User& user) 
+	{
+		return user.discordID == discordID;
+	});
+	if (it != user.end())
+	{
+		it->availability[static_cast<int>(day)] = status;
+		syncWithFile();
+		return true;
+	}
+	else
+		return false;
 }
 
 bool UserDatabase::changeAvailability_week(const std::string & discordID, std::vector<availableIndex> av)
 {
-	return false;
+	auto it = std::find_if(user.begin(), user.end(), [&](const User& user)
+	{
+		return user.discordID == discordID;
+	});
+	if (it != user.end())
+	{
+		it->availability = av;
+		syncWithFile();
+		return true;
+	}
+	else
+		return false;
 }
 
 std::string UserDatabase::getFormatedList()

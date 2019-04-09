@@ -32,8 +32,3 @@ void BotClient::onMessage(SleepyDiscord::Message message)
 	//if (message.startsWith("!pingme"))
 	//	sendMessage(message.channelID, to_personShoutout(message.author.ID));
 }
-
-void BotClient::sendMessage(SleepyDiscord::Snowflake<SleepyDiscord::Channel> channelID, std::string message)
-{
-	SleepyDiscord::DiscordClient::sendMessage(channelID, message);
-}

@@ -83,7 +83,7 @@ public:
 	~UserDatabase() noexcept;
 
 public:
-	bool changeAvailability_day(const std::string& discordID, dayIndex day, bool isAvailable);
+	bool changeAvailability_day(const std::string& discordID, dayIndex day, availableIndex status);
 	bool changeAvailability_week(const std::string& discordID, std::vector<availableIndex> av);
 	std::string getFormatedList();
 
