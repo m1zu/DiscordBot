@@ -262,3 +262,6 @@ paket-files/
 __pycache__/
 *.pyc
 /Project1/token.txt
+/Project1/userdata.dat
+*token.txt
+*userdata.dat

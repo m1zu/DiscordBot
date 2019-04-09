@@ -20,14 +20,13 @@ std::string UserDatabase::extendString(std::string s, unsigned int t)
 	if (s.size() > t-3)
 	{
 		s.resize(t);
-		s[t - 4] = '.';
 		s[t - 3] = '.';
-		s[t - 2] = ' ';
+		s[t - 2] = '.';
 		s[t - 1] = ' ';
 	}
 	else
 	{
-		for (unsigned int i = s.size(); i < t; ++i)
+		while (s.size()<t)
 			s += ' ';
 	}
 	return s;
@@ -70,7 +69,7 @@ std::string UserDatabase::getFormatedAttendanceList()
 	//Header 
 	//name 16Slots + weekday10Slots
 	int daybuffer = 10;
-	int namebuffer = 12;
+	int namebuffer = 18;
 	std::string output =
 		extendString("Member", namebuffer)
 		+ extendString("Sunday", daybuffer)
