@@ -1,5 +1,4 @@
 #include "UserDatabase.h"
-#include "MessageParser.h"
 
 #include <fstream>
 #include <algorithm>
@@ -16,7 +15,7 @@ UserDatabase::~UserDatabase()
 {
 }
 
-std::string extendString(std::string s, unsigned int t)
+std::string UserDatabase::extendString(std::string s, unsigned int t)
 {
 	if (s.size() > t-3)
 	{
@@ -66,7 +65,7 @@ bool UserDatabase::changeAvailability_week(const std::string & discordID, std::v
 		return false;
 }
 
-std::string UserDatabase::getFormatedList()
+std::string UserDatabase::getFormatedAttendanceList()
 {
 	//Header 
 	//name 16Slots + weekday10Slots
@@ -115,6 +114,23 @@ std::string UserDatabase::getFormatedList()
 	return	output;
 }
 
+std::string UserDatabase::getFormatedAdminList()
+{
+	std::sort(user.begin(), user.end(), [](User& user1, User& user2)
+	{
+		return user1.name < user2.name;
+	});
+
+	std::string output("#Admin List:\\n\\n");
+	std::for_each(user.begin(), user.end(), [&](const User& user)
+	{
+		if(user.isAdmin)
+			output += (user.name + "\\n");
+	});
+
+	return ("```md\\n" + output + "```");
+}
+
 bool UserDatabase::isUser(const std::string & discordID) const
 {
 	return std::any_of(user.begin(), user.end(), [&](const User& user) 
@@ -159,6 +175,54 @@ bool UserDatabase::removeUser(std::string username)
 		user.erase(it, user.end());
 		syncWithFile();
 		return true;
+	}
+	else
+		return false;
+}
+
+bool UserDatabase::addAdmin(std::string username)
+{
+	if (existsAsUser(username))
+	{
+		if (existsAsAdmin(username))
+		{
+			return true;
+		}
+		else
+		{
+			auto it = std::find_if(user.begin(), user.end(), [&](const User& user) 
+			{
+				return user.name == username;
+			});
+			if (it != user.end())
+			{
+				it->isAdmin = true;
+				syncWithFile();
+				return true;
+			}
+			else
+				return false;
+		}
+	}
+	return false;
+}
+
+bool UserDatabase::removeAdmin(std::string username)
+{
+	if (existsAsAdmin(username))
+	{
+		auto it = std::find_if(user.begin(), user.end(), [&](const User& user)
+		{
+			return user.name == username;
+		});
+		if (it != user.end())
+		{
+			it->isAdmin = false;
+			syncWithFile();
+			return true;
+		}
+		else
+			return false;
 	}
 	else
 		return false;
@@ -213,6 +277,10 @@ void UserDatabase::syncWithFile()
 	ofs.open(filename, std::ofstream::out | std::ofstream::trunc | std::ios_base::binary);
 	if (!ofs.is_open())
 		throw std::runtime_error("Userdata output file (for sync) could not be opened!");
+	std::sort(user.begin(), user.end(), [](User& user1, User& user2)
+	{
+		return user1.name < user2.name;
+	});
 	std::for_each(user.begin(), user.end(), [&](const User& user) 
 	{
 		ofs << user.name		<< ' '
@@ -221,4 +289,20 @@ void UserDatabase::syncWithFile()
 			<< user.availability << ' ';
 	});
 	ofs.close();
+}
+
+bool UserDatabase::existsAsUser(std::string username) const
+{
+	return std::any_of(user.begin(), user.end(), [&](const User& user)
+	{
+		return (username == user.name);
+	});
+}
+
+bool UserDatabase::existsAsAdmin(std::string username) const
+{
+	return std::any_of(user.begin(), user.end(), [&](const User& user)
+	{
+		return (user.isAdmin && (username == user.name));
+	});
 }

@@ -3,52 +3,120 @@
 
 MessageParser::Reply MessageParser::parseMessage(SleepyDiscord::Message& src, UserDatabase& userDatabase)
 {
-	std::string lowerCaseString = src.content;
-	std::transform(lowerCaseString.begin(), lowerCaseString.end(), lowerCaseString.begin(), ::tolower);
-	std::stringstream msgStream(lowerCaseString);
+	std::stringstream msgStream(src.content);
 	if (msgStream.eof())
 		throw std::runtime_error("Empty message passed to message parser.");
 
 	std::string currentArgument;
 	if (msgStream >> currentArgument)
 	{
-		if (currentArgument == "+")
+		toLowerCase(currentArgument);
+		const std::string srcDiscordID = src.author.ID.string();
+		if (userDatabase.isUser(srcDiscordID))
 		{
-			// toDo: Check Member list, if not there add member?
-			return { true, "Entered + parse argument" };
-			//execute + functionality for user
-		}
-		else if (currentArgument == "-")
-		{
-			// toDo: Check Member list, if not there add member?
-			return { true, "Entered - parse argument" };
-			//execute + functionality for user
-		}
-		else if (currentArgument == "week")
-		{
-			// toDo: Check Admin list for valid person
-			return { true, "Entered week parser branch!" };
-			// execute further week command parsing
-		}
-		else if (currentArgument == "list")
-		{
-			return { true, to_discordCodeBlock(userDatabase.getFormatedList())};
-			// output formated list
-		}
-		else if (currentArgument == "!admin")
-		{
-			// toDo: Check Admin list for valid person
-			msgStream >> currentArgument;
-			if (currentArgument == "!reset")
+			if (currentArgument == "+")
 			{
-				return { true, "Performed reset on availability data of all users!" };
+				return { true, "Current day + parse argument work in progress.." };
+				// execute + functionality for user
 			}
-			return { true, "Admin parser branch work in progress!" };
-			// execute further admin command parsing
-		}
-		else if (currentArgument == "!help" || currentArgument == "help")
-		{
-			return { true, ":poop: No help for the weak!" };
+			else if (currentArgument == "-")
+			{
+				return { true, "Current day - parse argument work in progress.." };
+				// execute + functionality for user
+			}
+			else if (currentArgument == "week" || currentArgument == "w")
+			{
+				if (parseWeekArgument(msgStream, src.author.ID.string(), userDatabase))
+					return { true, "Updated your attendance information for this week! You can check your attendance with the \\\"list\\\" or \\\"l\\\" command." };
+				else
+					return { true, "Not like dis pleb.. example: week + + + - ? + + (or) w +++-?++"};
+			}
+			else if (currentArgument == "list" || currentArgument == "l")
+			{
+				return { true, to_discordCodeBlock(userDatabase.getFormatedAttendanceList()) };
+			}
+			else if (currentArgument == "!admin" || currentArgument == "!a")
+			{
+				if (userDatabase.isAdmin(srcDiscordID))
+				{
+					msgStream >> currentArgument;
+					toLowerCase(currentArgument);
+
+					if (currentArgument == "addmember" || currentArgument == "add")
+					{
+						std::string add_pingedUser;
+						std::string add_username;
+						if (msgStream >> add_pingedUser >> add_username)
+						{
+							std::string add_discordID = extractDiscordID_fromPing(add_pingedUser);
+							if (!add_discordID.empty())
+							{
+								if (userDatabase.addUser(add_discordID, add_username))
+									return { true, "Added member ->   " + add_username };
+								else
+									return { true, "OMFG there is already a member with that discord ID u toxic fck!" };
+							}
+							else
+								return { true, "Did you ping me the user like I told you to? Invalid DiscordID duuh..." };
+						}
+						return { true, "Invalid input. Command !admin add/addmember <@pingMember> <member name>" };
+					}
+					else if (currentArgument == "removemember" || currentArgument == "rm")
+					{
+						std::string rm_username;
+						if (msgStream >> rm_username)
+						{
+							if (userDatabase.removeUser(rm_username))
+								return { true, "Removed member ->   " + rm_username };
+							else
+								return { true, "No member with username \\\"" + rm_username + "\\\" in the database... noob :weary:" };
+						}
+					}
+					else if (currentArgument == "addadmin")
+					{
+						std::string add_username;
+						if (msgStream >> add_username)
+						{
+							if (userDatabase.addAdmin(add_username))
+								return { true, "Added admin rights to ->   " + add_username };
+							else
+								return { true, "If you want to appoint admin to someone you should atleast be able to spell the username.. \\\""
+								        + add_username + "\\\"? What is this? A imaginary friend of yours?"};
+						}
+					}
+					else if (currentArgument == "removeadmin")
+					{
+						std::string rm_username;
+						if (msgStream >> rm_username)
+						{
+							if (userDatabase.removeAdmin(rm_username))
+								return { true, "Removed admin rights from ->   " + rm_username };
+							else
+								return { true, "Are we a little paranoid today??? \\\""
+										+ rm_username + "\\\"? Removing admin rights from people which do not even exist?" };
+						}
+					}
+					else if (currentArgument == "reset" || currentArgument == "resetlist")
+					{
+						userDatabase.reset();
+						return { true, "Performed reset on availability data of all users!" };
+					}
+					else if (currentArgument == "list" || currentArgument == "l")
+					{
+						return { true, userDatabase.getFormatedAdminList() };
+					}
+					else
+					{
+						return { true, "Not a valid !admin command! Do you even discord bro?" };
+					}
+				}
+				else
+					return { true, "Ahaha who do you think you are?! :joy:" };
+			}
+			else if (currentArgument == "!help" || currentArgument == "help")
+			{
+				return { true, "Well, I could help you out but would you even get smarter from that? I doubt it.. :smirk:\\n" + getCommandList() };
+			}
 		}
 	}
 	return { false, "" };
@@ -96,7 +164,122 @@ std::string MessageParser::to_personShoutout(SleepyDiscord::Snowflake<SleepyDisc
 std::string MessageParser::extractDiscordID_fromPing(std::string userPinged)
 {
 	//	content example	"<@!168729205960343562>"
-	size_t start = userPinged.find_first_of('!') + 1;
-	size_t end = userPinged.find_first_of('>');
-	return userPinged.substr(3, end-start);
+	//  content example	"<@168729205960343562>"
+	size_t check0 = userPinged.find('<');
+	size_t check1 = userPinged.find('@');
+	size_t check2 = userPinged.find('>');
+	if (check0 != std::string::npos
+		&& check1 != std::string::npos
+		&& check2 != std::string::npos
+		&& check0 < check2
+		&& int(check2 - check0) > 10)
+	{
+		size_t start = userPinged.find('!');
+		size_t end = userPinged.find('>');
+		if (start == std::string::npos)
+		{
+			start = userPinged.find('@');
+		}
+		start++;
+		return userPinged.substr(start, end - start);
+	}
+	else
+		return std::string();
+}
+
+std::string & MessageParser::toLowerCase(std::string & s)
+{
+	std::transform(s.begin(), s.end(), s.begin(), ::tolower);
+	return s;
+}
+
+std::string MessageParser::getCommandList() const
+{
+	int commandBuffer = 22;
+	return std::string( 
+		"```css\\nUser Command list: \\n\\n"
+		+ UserDatabase::extendString("list/l", commandBuffer)	+ "print out the attendance list for this week\\n"
+		//+ UserDatabase::extendString("+", commandBuffer)		+ "\\\"yes\\\" for todays attendance\\n"
+		//+ UserDatabase::extendString("-", commandBuffer)		+ "\\\"no\\\" for todays attendance\\n"
+		//+ UserDatabase::extendString("?", commandBuffer)		+ "\\\"maybe\\\" for todays attendance\\n"
+		+ UserDatabase::extendString("week/w", commandBuffer)   + "attendece fill out: sunday -> (next weekend) Saturday\\n"
+		+ UserDatabase::extendString("", commandBuffer)			+ "    (syntax: week (sunday)(monday)(tuesday)..)\\n"
+		+ UserDatabase::extendString("", commandBuffer)			+ "    (example: week +-?++-+ (OR) w + + + - + ? +)\\n\\n"
+		+ UserDatabase::extendString("Admin Command List:", commandBuffer)	    + "\\n\\n"
+		+ UserDatabase::extendString("!admin/!a", commandBuffer)				+ "admin command branch: !admin <nextCommand>\\n"
+		+ UserDatabase::extendString("-> addMember/add", commandBuffer)			+ "add a member\\n"
+		+ UserDatabase::extendString("", commandBuffer)							+ "    (syntax: !admin add <PINGmember> <displayName>)\\n"
+		+ UserDatabase::extendString("-> removeMember/rm", commandBuffer)		+ "remove a member\\n"
+		+ UserDatabase::extendString("", commandBuffer)							+ "    (syntax: !admin rm <memberName>)\\n"
+		+ UserDatabase::extendString("-> addAdmin", commandBuffer)				+ "give admin rights to member\\n"
+		+ UserDatabase::extendString("", commandBuffer)							+ "    (syntax: !admin addAdmin <memberName>)\\n"
+		+ UserDatabase::extendString("-> removeAdmin", commandBuffer)			+ "remove admin rights from member\\n"
+		+ UserDatabase::extendString("", commandBuffer)							+ "    (syntax: !admin removeAdmin <memberName>)\\n"
+		+ UserDatabase::extendString("-> reset/resetList", commandBuffer)		+ "reset the attendance list\\n"
+		+ "```"
+	);
+}
+
+bool MessageParser::parseWeekArgument(std::stringstream& ss, std::string discordIDuser, UserDatabase& dataBase)
+{
+	std::string argument;
+	std::vector<UserDatabase::availableIndex> av((int)UserDatabase::dayIndex::nCount);
+
+	ss >> argument;
+	if (argument.size() == 7)
+	{
+		int counter = 0;
+		for (char c : argument)
+		{
+			switch (c)
+			{
+			case '+':
+				av[counter] = UserDatabase::availableIndex::yes;
+				counter++;
+				break;
+			case '-':
+				av[counter] = UserDatabase::availableIndex::no;
+				counter++;
+				break;
+			case '?':
+				av[counter] = UserDatabase::availableIndex::unsure;
+				counter++;
+				break;
+			default:
+				return false;
+			}
+		}
+		dataBase.changeAvailability_week(discordIDuser, av);
+		return true;
+	}
+	else if (argument.size() == 1)
+	{
+		int counter = 0;
+		char c = argument.c_str()[0];
+		do
+		{
+			switch (c)
+			{
+			case '+':
+				av[counter] = UserDatabase::availableIndex::yes;
+				counter++;
+				break;
+			case '-':
+				av[counter] = UserDatabase::availableIndex::no;
+				counter++;
+				break;
+			case '?':
+				av[counter] = UserDatabase::availableIndex::unsure;
+				counter++;
+				break;
+			default:
+				return false;
+			}
+		}
+		while ((ss >> c) && (counter < 7));
+		dataBase.changeAvailability_week(discordIDuser, av);
+		return true;
+	}
+	else
+		return false;
 }

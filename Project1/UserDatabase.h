@@ -85,18 +85,26 @@ public:
 public:
 	bool changeAvailability_day(const std::string& discordID, dayIndex day, availableIndex status);
 	bool changeAvailability_week(const std::string& discordID, std::vector<availableIndex> av);
-	std::string getFormatedList();
+	std::string getFormatedAttendanceList();
+	std::string getFormatedAdminList();
 
 	bool isUser(const std::string& discordID) const;
 	bool isAdmin(const std::string& discordID) const;
 
 	bool addUser(std::string discordID, std::string username);
 	bool removeUser(std::string username);
+	bool addAdmin(std::string username);
+	bool removeAdmin(std::string username);
 	void reset();
+
+public:
+	static std::string extendString(std::string s, unsigned int t);
 
 private:
 	void loadFile();
 	void syncWithFile();
+	bool existsAsUser(std::string username) const;
+	bool existsAsAdmin(std::string username) const;
 
 private:
 	std::string filename;

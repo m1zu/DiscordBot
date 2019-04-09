@@ -23,6 +23,13 @@ public:
 	static std::string to_personShoutout(SleepyDiscord::Snowflake<SleepyDiscord::User> authorID);
 	
 	static std::string extractDiscordID_fromPing(std::string userPinged);
+	static std::string& toLowerCase(std::string& s);
+
+public:
+	std::string getCommandList() const;
+
+private:
+	bool parseWeekArgument(std::stringstream& ss, std::string discordIDuser, UserDatabase& dataBase);
 
 private:
 	bool informationMode = false;
