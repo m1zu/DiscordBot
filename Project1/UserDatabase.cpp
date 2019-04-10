@@ -4,9 +4,10 @@
 #include <algorithm>
 #include <sstream>
 #include <assert.h>
+#include <ctime>
 
 UserDatabase::UserDatabase()
-	:filename("userdata.dat")
+	:filename("userdata.udat")
 {
 	loadFile();
 }
@@ -31,6 +32,25 @@ std::string UserDatabase::extendString(std::string s, unsigned int t)
 	}
 	return s;
 }
+
+std::string UserDatabase::to_discordCodeBlock_md(std::string s)
+{
+	return "```md\\n" + s + "```";
+}
+
+std::string UserDatabase::to_personShoutout(std::string authorID)
+{
+	return " <@" + authorID + ">";
+}
+
+UserDatabase::dayIndex UserDatabase::getWeekdayToday()
+{
+	time_t time_now = time(0);
+	tm tt;
+	localtime_s(&tt, &time_now);
+	return static_cast<UserDatabase::dayIndex>(tt.tm_wday);
+}
+
 
 bool UserDatabase::changeAvailability_day(const std::string & discordID, dayIndex day, availableIndex status)
 {
@@ -78,7 +98,21 @@ std::string UserDatabase::getFormatedAttendanceList()
 		+ extendString("Wednesday", daybuffer)
 		+ extendString("Thursday", daybuffer)
 		+ extendString("Friday", daybuffer)
-		+ extendString("Saturday", daybuffer) + "\\n\\n";
+		+ extendString("Saturday", daybuffer) + "\\n"
+		+ extendString("> yes(maybe)", namebuffer);
+	for (int i = dayIndex::sunday; i < dayIndex::nCount; ++i)
+	{
+		int nYes = std::count_if(user.begin(), user.end(), [=](const User& user)
+		{
+			return user.availability[i] == availableIndex::yes;
+		});
+		int nMaybe = std::count_if(user.begin(), user.end(), [=](const User& user)
+		{
+			return user.availability[i] == availableIndex::unsure;
+		});
+		output += extendString(std::to_string(nYes) + "(" + std::to_string(nMaybe) +")", daybuffer);
+	}
+	output += "\\n\\n";
 
 	std::sort(user.begin(), user.end(), [](User& user1, User& user2)
 	{
@@ -94,13 +128,13 @@ std::string UserDatabase::getFormatedAttendanceList()
 			switch (index)
 			{
 			case availableIndex::no:
-				output += extendString("* no *", daybuffer);
+				output += extendString("* noo *", daybuffer);
 				break;
 			case availableIndex::yes:
 				output += extendString("< yes >", daybuffer);
 				break;
 			case availableIndex::unsure:
-				output += extendString("<mby>", daybuffer);
+				output += extendString("<maybe>", daybuffer);
 				break;
 			default:
 				output += extendString(".", daybuffer);
@@ -110,7 +144,7 @@ std::string UserDatabase::getFormatedAttendanceList()
 		output += "\\n";
 	});
 
-	return	output;
+	return	UserDatabase::to_discordCodeBlock_md(output);
 }
 
 std::string UserDatabase::getFormatedAdminList()
@@ -127,7 +161,18 @@ std::string UserDatabase::getFormatedAdminList()
 			output += (user.name + "\\n");
 	});
 
-	return ("```md\\n" + output + "```");
+	return to_discordCodeBlock_md("\\n" + output);
+}
+
+std::string UserDatabase::getReminderMessage() const
+{
+	std::string output("Hrnshn listn to me?! Time to fill the weekly attendance!\\n");
+	std::for_each(user.begin(), user.end(), [&](const User& user) 
+	{
+		if (!user.availabilityFilled())
+			output += to_personShoutout(user.discordID) + " ";
+	});
+	return output;
 }
 
 bool UserDatabase::isUser(const std::string & discordID) const
@@ -148,6 +193,22 @@ bool UserDatabase::isAdmin(const std::string & discordID) const
 		return false;
 	else
 		return it->isAdmin;
+}
+
+bool UserDatabase::changeUsername(std::string currentName, std::string newName)
+{
+	auto it = std::find_if(user.begin(), user.end(), [&](const User& user)
+	{
+		return user.name == currentName;
+	});
+	if (it != user.end())
+	{
+		it->name = newName;
+		syncWithFile();
+		return true;
+	}
+	else
+		return false;
 }
 
 bool UserDatabase::addUser(std::string discordID, std::string username)

@@ -17,13 +17,24 @@ MessageParser::Reply MessageParser::parseMessage(SleepyDiscord::Message& src, Us
 		{
 			if (currentArgument == "+")
 			{
-				return { true, "Current day + parse argument work in progress.." };
-				// execute + functionality for user
+				if (userDatabase.changeAvailability_day(srcDiscordID, UserDatabase::getWeekdayToday(), UserDatabase::availableIndex::yes))
+					return { true, "Changed your availability status for today to: < yes >" };
+				else
+					return { true, "Eeeh something went wrong could not change ur status.." };
 			}
 			else if (currentArgument == "-")
 			{
-				return { true, "Current day - parse argument work in progress.." };
-				// execute + functionality for user
+				if (userDatabase.changeAvailability_day(srcDiscordID, UserDatabase::getWeekdayToday(), UserDatabase::availableIndex::no))
+					return { true, "Changed your availability status for today to: * noo *" };
+				else
+					return { true, "Eeeh something went wrong could not change ur status.." };
+			}
+			else if (currentArgument == "?")
+			{
+				if (userDatabase.changeAvailability_day(srcDiscordID, UserDatabase::getWeekdayToday(), UserDatabase::availableIndex::unsure))
+					return { true, "Changed your availability status for today to: <maybe>" };
+				else
+					return { true, "Eeeh something went wrong could not change ur status.." };
 			}
 			else if (currentArgument == "week" || currentArgument == "w")
 			{
@@ -34,7 +45,7 @@ MessageParser::Reply MessageParser::parseMessage(SleepyDiscord::Message& src, Us
 			}
 			else if (currentArgument == "list" || currentArgument == "l")
 			{
-				return { true, to_discordCodeBlock(userDatabase.getFormatedAttendanceList()) };
+				return { true, userDatabase.getFormatedAttendanceList() };
 			}
 			else if (currentArgument == "!help" || currentArgument == "help" || currentArgument == "help!")
 			{
@@ -44,7 +55,15 @@ MessageParser::Reply MessageParser::parseMessage(SleepyDiscord::Message& src, Us
 
 		if (userDatabase.isAdmin(srcDiscordID))
 		{
-			if (currentArgument == "addmember" || currentArgument == "add")
+			if (currentArgument == "adminlist" || currentArgument == "al")
+			{
+				return { true, userDatabase.getFormatedAdminList() };
+			}
+			else if (currentArgument == "remind" || currentArgument == "r")
+			{
+				return { true, userDatabase.getReminderMessage() };
+			}
+			else if (currentArgument == "addmember" || currentArgument == "add")
 			{
 				std::string add_pingedUser;
 				std::string add_username;
@@ -73,6 +92,20 @@ MessageParser::Reply MessageParser::parseMessage(SleepyDiscord::Message& src, Us
 					else
 						return { true, "No member with username \\\"" + rm_username + "\\\" in the database... noob :weary:" };
 				}
+			}
+			else if (currentArgument == "changeName" || currentArgument == "ch")
+			{
+				std::string currentUsername;
+				std::string newUsername;
+				if (msgStream >> currentUsername >> newUsername)
+				{
+					if (userDatabase.changeUsername(currentUsername, newUsername))
+						return{ true, "Renamed member: " + currentUsername + "  ->  " + newUsername };
+					else
+						return{ true, currentUsername + "is not a friend you have sry for u" };
+				}
+				else
+					return{ true, "l2p faggi: ch <currentName> <newName>"};
 			}
 			else if (currentArgument == "addadmin")
 			{
@@ -103,10 +136,6 @@ MessageParser::Reply MessageParser::parseMessage(SleepyDiscord::Message& src, Us
 				userDatabase.reset();
 				return { true, "Performed reset on availability data of all users!" };
 			}
-			else if (currentArgument == "adminlist" || currentArgument == "al")
-			{
-				return { true, userDatabase.getFormatedAdminList() };
-			}
 		}
 	}
 	return { false, "" };
@@ -131,24 +160,9 @@ MessageParser::Reply MessageParser::getMessageInfo(SleepyDiscord::Message & mess
 			+ "\\n"
 			+ "\\nContent: " + msgStream;
 
-		return { true, to_discordCodeBlock(messageDataFormatted) };
+		return { true, UserDatabase::to_discordCodeBlock_md(messageDataFormatted) };
 	}
 	return { false, "" };
-}
-
-std::string MessageParser::to_discordCodeBlock(const std::string& s)
-{
-	return "```md\\n" + s + "```";
-}
-
-std::string MessageParser::to_personShoutout(const std::string& authorID)
-{
-	return " <@" + authorID + ">";
-}
-
-std::string MessageParser::to_personShoutout(SleepyDiscord::Snowflake<SleepyDiscord::User> authorID)
-{
-	return to_personShoutout(static_cast<std::string>(authorID));
 }
 
 std::string MessageParser::extractDiscordID_fromPing(std::string userPinged)
@@ -189,25 +203,29 @@ std::string MessageParser::getCommandList() const
 	return std::string( 
 		"```css\\n[User Command list]\\n\\n"
 		+ UserDatabase::extendString("- list/l", commandBuffer)	+ "print out the attendance list for this week\\n"
-		//+ UserDatabase::extendString("+", commandBuffer)		+ "\\\"yes\\\" for todays attendance\\n"
-		//+ UserDatabase::extendString("-", commandBuffer)		+ "\\\"no\\\" for todays attendance\\n"
-		//+ UserDatabase::extendString("?", commandBuffer)		+ "\\\"maybe\\\" for todays attendance\\n"
+		+ UserDatabase::extendString("+", commandBuffer)		+ "\\\"yes\\\" for todays attendance\\n"
+		+ UserDatabase::extendString("-", commandBuffer)		+ "\\\"no\\\" for todays attendance\\n"
+		+ UserDatabase::extendString("?", commandBuffer)		+ "\\\"maybe\\\" for todays attendance\\n"
 		+ UserDatabase::extendString("- week/w", commandBuffer) + "attendece fill out: sunday -> (next weekend) Saturday\\n"
 		+ UserDatabase::extendString("", commandBuffer)			+ "(syntax: week (sunday)(monday)(tuesday)..)\\n"
 		+ UserDatabase::extendString("", commandBuffer)			+ "(example: week +-?++-+ (OR) w + + + - + ? +)\\n\\n"
 
 		+ UserDatabase::extendString("[Admin Command List]", commandBuffer)		+"\\n\\n"
 		+ UserDatabase::extendString("- adminList/al", commandBuffer)			+ "list of admins\\n"
+		+ UserDatabase::extendString("- remind/r", commandBuffer)				+ "remind users to fill the week attendance\\n"
 		+ UserDatabase::extendString("- addMember/add", commandBuffer)			+ "add a member\\n"
-		+ UserDatabase::extendString("", commandBuffer)							+ "(syntax: !admin add <PINGmember> <displayName>)\\n"
+		+ UserDatabase::extendString("", commandBuffer)							+ "(syntax: add <PINGmember> <displayName>)\\n"
 		+ UserDatabase::extendString("- removeMember/rm", commandBuffer)		+ "remove a member\\n"
-		+ UserDatabase::extendString("", commandBuffer)							+ "(syntax: !admin rm <memberName>)\\n"
+		+ UserDatabase::extendString("", commandBuffer)							+ "(syntax: rm <memberName>)\\n"
+		+ UserDatabase::extendString("- changeName/ch", commandBuffer)			+ "change a member name\\n"
+		+ UserDatabase::extendString("", commandBuffer)							+ "(syntax: ch <currentName> <newName>)\\n"
 		+ UserDatabase::extendString("- addAdmin", commandBuffer)				+ "give admin rights to member\\n"
-		+ UserDatabase::extendString("", commandBuffer)							+ "(syntax: !admin addAdmin <memberName>)\\n"
+		+ UserDatabase::extendString("", commandBuffer)							+ "(syntax: addAdmin <memberName>)\\n"
 		+ UserDatabase::extendString("- removeAdmin", commandBuffer)			+ "remove admin rights from member\\n"
-		+ UserDatabase::extendString("", commandBuffer)							+ "(syntax: !admin removeAdmin <memberName>)\\n"
+		+ UserDatabase::extendString("", commandBuffer)							+ "(syntax: removeAdmin <memberName>)\\n"
 		+ UserDatabase::extendString("- reset/resetList", commandBuffer)		+ "reset the attendance list\\n\\n"
-		+ UserDatabase::extendString("", commandBuffer)							+ "#ParanoidBot V1.01"
+		+ UserDatabase::extendString("", commandBuffer)							+ "! automatic reset Saturday->Sunday(local time)\\n\\n"
+		+ UserDatabase::extendString("", commandBuffer)							+ "#ParanoidBot V1.02"
 		+ "```"
 	);
 }

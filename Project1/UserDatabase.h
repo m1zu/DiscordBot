@@ -5,6 +5,7 @@
 #include <map>
 #include <fstream>
 #include <ostream>
+#include <algorithm>
 
 class UserDatabase
 {
@@ -76,6 +77,16 @@ private:
 		std::string discordID;
 		bool isAdmin = false;
 		std::vector<availableIndex> availability;
+
+	public:
+		bool availabilityFilled() const
+		{
+			bool notFilled = std::any_of(availability.begin(), availability.end(), [](const availableIndex& i)
+			{
+				return i == availableIndex::notFilled;
+			});
+			return !notFilled;
+		}
 	};
 
 public:
@@ -87,10 +98,12 @@ public:
 	bool changeAvailability_week(const std::string& discordID, std::vector<availableIndex> av);
 	std::string getFormatedAttendanceList();
 	std::string getFormatedAdminList();
+	std::string getReminderMessage() const;
 
 	bool isUser(const std::string& discordID) const;
 	bool isAdmin(const std::string& discordID) const;
 
+	bool changeUsername(std::string currentName, std::string newName);
 	bool addUser(std::string discordID, std::string username);
 	bool removeUser(std::string username);
 	bool addAdmin(std::string username);
@@ -99,6 +112,10 @@ public:
 
 public:
 	static std::string extendString(std::string s, unsigned int t);
+	static std::string to_discordCodeBlock_md(std::string message);
+	static std::string to_personShoutout(std::string discordID);
+
+	static dayIndex getWeekdayToday();
 
 private:
 	void loadFile();

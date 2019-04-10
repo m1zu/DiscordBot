@@ -261,7 +261,7 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
-/Project1/token.txt
-/Project1/userdata.dat
+
+#mystuff
 *token.txt
-*userdata.dat
+*.udat

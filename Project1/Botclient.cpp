@@ -1,4 +1,4 @@
-#include "BotClient.h"
+#include "Botclient.h"
 #include <sstream>
 #include <iostream>
 
@@ -9,6 +9,16 @@ void BotClient::onMessage(SleepyDiscord::Message message)
 		return;
 	if (message.type != SleepyDiscord::Message::MessageType::DEFAULT)
 		return;
+
+	// Check for reset nec.?
+	if (resetTimer.resetIsDue())
+	{
+		userDatabase.reset();
+		schedule([this, message]() {
+			SleepyDiscord::DiscordClient::sendMessage(message.channelID, userDatabase.getFormatedAttendanceList());
+			SleepyDiscord::DiscordClient::sendMessage(message.channelID, "Adventurers! A new week has come and with it a new way of me annoying you!");
+		}, 5000);
+	}
 
 	// Message Parser
 	try
