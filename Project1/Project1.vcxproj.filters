@@ -30,9 +30,6 @@
     <ClCompile Include="ResetTimer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MessageHistory.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Botclient.h">
@@ -45,9 +42,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ResetTimer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MessageHistory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
