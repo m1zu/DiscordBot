@@ -5,6 +5,7 @@
 #include "MessageParser.h"
 #include "UserDatabase.h"
 #include "ResetTimer.h"
+#include "MessageHistory.h"
 
 class BotClient : public SleepyDiscord::DiscordClient 
 {
@@ -17,4 +18,5 @@ private:
 	UserDatabase userDatabase;
 	MessageParser parser;
 	ResetTimer resetTimer;
+	MessageHistory messageHistoryManager;
 };

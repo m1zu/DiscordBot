@@ -4,6 +4,8 @@
 
 void BotClient::onMessage(SleepyDiscord::Message message)
 {
+	messageHistoryManager.manageMessageHistory(message, *this);
+
 	// General Message Filters
 	if (message.author.bot)
 		return;
