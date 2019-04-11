@@ -4,6 +4,7 @@
 #include <sleepy_discord/websocketpp_websocket.h>
 
 #include "UserDatabase.h"
+#include "MessageHistory.h"
 
 class MessageParser
 {
@@ -14,7 +15,10 @@ public:
 		std::string answer;
 	};
 public:
-	Reply parseMessage(SleepyDiscord::Message& message, UserDatabase& dataBase);
+	MessageParser(UserDatabase& userdatabase, MessageHistory& messagehistory);
+
+public:
+	Reply parseMessage(SleepyDiscord::Message& message);
 	Reply getMessageInfo(SleepyDiscord::Message& message);
 
 public:	
@@ -25,9 +29,10 @@ public:
 	std::string getCommandList() const;
 
 private:
-	bool parseWeekArgument(std::stringstream& ss, std::string discordIDuser, UserDatabase& dataBase);
+	bool parseWeekArgument(std::stringstream& ss, std::string discordIDuser);
 
 private:
-	bool informationMode = false;
+	UserDatabase& userDatabase;
+	MessageHistory& msgHistory;
 };
 

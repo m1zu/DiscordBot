@@ -1,7 +1,14 @@
 #include "MessageParser.h"
 #include <algorithm>
 
-MessageParser::Reply MessageParser::parseMessage(SleepyDiscord::Message& src, UserDatabase& userDatabase)
+MessageParser::MessageParser(UserDatabase & userdatabase, MessageHistory & messagehistory)
+	:
+	userDatabase(userdatabase),
+	msgHistory(messagehistory)
+{
+}
+
+MessageParser::Reply MessageParser::parseMessage(SleepyDiscord::Message& src)
 {
 	std::stringstream msgStream(src.content);
 	if (msgStream.eof())
@@ -38,7 +45,7 @@ MessageParser::Reply MessageParser::parseMessage(SleepyDiscord::Message& src, Us
 			}
 			else if (currentArgument == "week" || currentArgument == "w")
 			{
-				if (parseWeekArgument(msgStream, src.author.ID.string(), userDatabase))
+				if (parseWeekArgument(msgStream, src.author.ID.string()))
 					return { true, "Updated your attendance information for this week! You can check your attendance with the \\\"list\\\" or \\\"l\\\" command." };
 				else
 					return { true, "Not like dis pleb.. example: week + + + - ? + + (or) w +++-?++" };
@@ -62,6 +69,11 @@ MessageParser::Reply MessageParser::parseMessage(SleepyDiscord::Message& src, Us
 			else if (currentArgument == "remind" || currentArgument == "r")
 			{
 				return { true, userDatabase.getReminderMessage() };
+			}
+			else if (currentArgument == "pruneMessages" || currentArgument == "pm")
+			{
+				msgHistory.prune(src.channelID);
+				return { false, std::string() };
 			}
 			else if (currentArgument == "addmember" || currentArgument == "add")
 			{
@@ -143,26 +155,22 @@ MessageParser::Reply MessageParser::parseMessage(SleepyDiscord::Message& src, Us
 
 MessageParser::Reply MessageParser::getMessageInfo(SleepyDiscord::Message & message)
 {
-	if (informationMode)
-	{
-		std::string serverID = static_cast<std::string>(message.serverID);
-		std::string channelID = static_cast<std::string>(message.channelID);
-		std::string author = message.author.username;
-		std::string authorID = static_cast<std::string>(message.author.ID);
-		std::string msgStream = message.content;
+	std::string serverID = static_cast<std::string>(message.serverID);
+	std::string channelID = static_cast<std::string>(message.channelID);
+	std::string author = message.author.username;
+	std::string authorID = static_cast<std::string>(message.author.ID);
+	std::string msgStream = message.content;
 
-		std::string messageDataFormatted =
-			+"Server ID: " + serverID
-			+ "\\nChannel ID: " + channelID
-			+ "\\n"
-			+ "\\nAuthor: " + author
-			+ "\\nAuthor ID: " + authorID
-			+ "\\n"
-			+ "\\nContent: " + msgStream;
+	std::string messageDataFormatted =
+		+"Server ID: " + serverID
+		+ "\\nChannel ID: " + channelID
+		+ "\\n"
+		+ "\\nAuthor: " + author
+		+ "\\nAuthor ID: " + authorID
+		+ "\\n"
+		+ "\\nContent: " + msgStream;
 
-		return { true, UserDatabase::to_discordCodeBlock_md(messageDataFormatted) };
-	}
-	return { false, "" };
+	return { true, UserDatabase::to_discordCodeBlock_md(messageDataFormatted) };
 }
 
 std::string MessageParser::extractDiscordID_fromPing(std::string userPinged)
@@ -203,9 +211,9 @@ std::string MessageParser::getCommandList() const
 	return std::string( 
 		"```css\\n[User Command list]\\n\\n"
 		+ UserDatabase::extendString("- list/l", commandBuffer)	+ "print out the attendance list for this week\\n"
-		+ UserDatabase::extendString("+", commandBuffer)		+ "\\\"yes\\\" for todays attendance\\n"
-		+ UserDatabase::extendString("-", commandBuffer)		+ "\\\"no\\\" for todays attendance\\n"
-		+ UserDatabase::extendString("?", commandBuffer)		+ "\\\"maybe\\\" for todays attendance\\n"
+		+ UserDatabase::extendString("- (plus)", commandBuffer)		+ "\\\"yes\\\" for todays attendance\\n"
+		+ UserDatabase::extendString("- (minus)", commandBuffer)		+ "\\\"no\\\" for todays attendance\\n"
+		+ UserDatabase::extendString("- (questionmark)", commandBuffer)		+ "\\\"maybe\\\" for todays attendance\\n"
 		+ UserDatabase::extendString("- week/w", commandBuffer) + "attendece fill out: sunday -> (next weekend) Saturday\\n"
 		+ UserDatabase::extendString("", commandBuffer)			+ "(syntax: week (sunday)(monday)(tuesday)..)\\n"
 		+ UserDatabase::extendString("", commandBuffer)			+ "(example: week +-?++-+ (OR) w + + + - + ? +)\\n\\n"
@@ -213,6 +221,7 @@ std::string MessageParser::getCommandList() const
 		+ UserDatabase::extendString("[Admin Command List]", commandBuffer)		+"\\n\\n"
 		+ UserDatabase::extendString("- adminList/al", commandBuffer)			+ "list of admins\\n"
 		+ UserDatabase::extendString("- remind/r", commandBuffer)				+ "remind users to fill the week attendance\\n"
+		+ UserDatabase::extendString("- pruneMessages/pm", commandBuffer)		+ "prune message history of the channel\\n"
 		+ UserDatabase::extendString("- addMember/add", commandBuffer)			+ "add a member\\n"
 		+ UserDatabase::extendString("", commandBuffer)							+ "(syntax: add <PINGmember> <displayName>)\\n"
 		+ UserDatabase::extendString("- removeMember/rm", commandBuffer)		+ "remove a member\\n"
@@ -230,7 +239,7 @@ std::string MessageParser::getCommandList() const
 	);
 }
 
-bool MessageParser::parseWeekArgument(std::stringstream& ss, std::string discordIDuser, UserDatabase& dataBase)
+bool MessageParser::parseWeekArgument(std::stringstream& ss, std::string discordIDuser)
 {
 	std::string argument;
 	std::vector<UserDatabase::availableIndex> av((int)UserDatabase::dayIndex::nCount);
@@ -261,7 +270,7 @@ bool MessageParser::parseWeekArgument(std::stringstream& ss, std::string discord
 			if (counter >= 7)
 				break;
 		}
-		dataBase.changeAvailability_week(discordIDuser, av);
+		userDatabase.changeAvailability_week(discordIDuser, av);
 		return true;
 	}
 	else if (argument.size() == 1)
@@ -289,7 +298,7 @@ bool MessageParser::parseWeekArgument(std::stringstream& ss, std::string discord
 			}
 		}
 		while ((ss >> c) && (counter < 7));
-		dataBase.changeAvailability_week(discordIDuser, av);
+		userDatabase.changeAvailability_week(discordIDuser, av);
 		return true;
 	}
 	else

@@ -2,15 +2,25 @@
 #include <sstream>
 #include <iostream>
 
+BotClient::BotClient(const std::string& token)
+	:
+	SleepyDiscord::DiscordClient(token),
+	messageHistoryManager(*this),
+	parser(userDatabase, messageHistoryManager)
+{
+}
+
 void BotClient::onMessage(SleepyDiscord::Message message)
 {
 	// General Message Filters
-	if (message.author.bot)
-		return;
 	if (message.type != SleepyDiscord::Message::MessageType::DEFAULT)
 		return;
 
-	// Check for reset nec.?
+	messageHistoryManager.add(message);
+	if (message.author.bot)
+		return;
+
+	// Check for reset of database attendance nec.?
 	if (resetTimer.resetIsDue())
 	{
 		userDatabase.reset();
@@ -23,11 +33,7 @@ void BotClient::onMessage(SleepyDiscord::Message message)
 	// Message Parser
 	try
 	{
-		MessageParser::Reply reply = parser.parseMessage(message, userDatabase);
-		if(reply.hasToSaySomething)
-			SleepyDiscord::DiscordClient::sendMessage(message.channelID, reply.answer);
-
-		reply = parser.getMessageInfo(message);
+		MessageParser::Reply reply = parser.parseMessage(message);
 		if(reply.hasToSaySomething)
 			SleepyDiscord::DiscordClient::sendMessage(message.channelID, reply.answer);
 	}
