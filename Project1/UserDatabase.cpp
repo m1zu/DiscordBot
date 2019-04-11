@@ -49,7 +49,7 @@ UserDatabase::dayIndex UserDatabase::getWeekdayToday()
 	tm tt;
 
 #ifdef __unix__
-	localtime_r(&tt, &time_now);
+	localtime_r(&time_now, &tt);
 #elif defined(_WIN32) || defined(WIN32)
 	localtime_s(&tt, &time_now);
 #endif
