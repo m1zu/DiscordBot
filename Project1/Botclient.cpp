@@ -5,8 +5,7 @@
 BotClient::BotClient(const std::string& token)
 	:
 	SleepyDiscord::DiscordClient(token),
-	messageHistoryManager(*this),
-	parser(userDatabase, messageHistoryManager)
+	parser(userDatabase, *this)
 {
 }
 
@@ -16,7 +15,6 @@ void BotClient::onMessage(SleepyDiscord::Message message)
 	if (message.type != SleepyDiscord::Message::MessageType::DEFAULT)
 		return;
 
-	messageHistoryManager.add(message);
 	if (message.author.bot)
 		return;
 

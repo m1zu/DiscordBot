@@ -1,10 +1,10 @@
 #include "MessageParser.h"
 #include <algorithm>
 
-MessageParser::MessageParser(UserDatabase & userdatabase, MessageHistory & messagehistory)
+MessageParser::MessageParser(UserDatabase& userdatabase, SleepyDiscord::DiscordClient& client)
 	:
 	userDatabase(userdatabase),
-	msgHistory(messagehistory)
+	client(client)
 {
 }
 
@@ -72,7 +72,14 @@ MessageParser::Reply MessageParser::parseMessage(SleepyDiscord::Message& src)
 			}
 			else if (currentArgument == "pruneMessages" || currentArgument == "pm")
 			{
-				msgHistory.prune(src.channelID);
+				SleepyDiscord::ArrayResponse<SleepyDiscord::Message> response = client.getMessages(src.channelID, client.na, "");
+				std::vector<SleepyDiscord::Message> temp_vec = response;
+				std::vector<SleepyDiscord::Snowflake<SleepyDiscord::Message>> snow_msgHistory;
+				std::for_each(temp_vec.begin(), temp_vec.end(), [&](SleepyDiscord::Message& m)
+				{
+					snow_msgHistory.push_back(m);
+				});
+				client.bulkDeleteMessages(src.channelID, snow_msgHistory);
 				return { false, std::string() };
 			}
 			else if (currentArgument == "addmember" || currentArgument == "add")

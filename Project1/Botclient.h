@@ -18,6 +18,5 @@ public:
 private:
 	UserDatabase userDatabase;
 	ResetTimer resetTimer;
-	MessageHistory messageHistoryManager;
 	MessageParser parser;
 };

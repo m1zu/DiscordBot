@@ -15,7 +15,7 @@ public:
 		std::string answer;
 	};
 public:
-	MessageParser(UserDatabase& userdatabase, MessageHistory& messagehistory);
+	MessageParser(UserDatabase& userdatabase, SleepyDiscord::DiscordClient& client);
 
 public:
 	Reply parseMessage(SleepyDiscord::Message& message);
@@ -33,6 +33,6 @@ private:
 
 private:
 	UserDatabase& userDatabase;
-	MessageHistory& msgHistory;
+	SleepyDiscord::DiscordClient& client;
 };
 
