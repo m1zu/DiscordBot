@@ -47,7 +47,13 @@ UserDatabase::dayIndex UserDatabase::getWeekdayToday()
 {
 	time_t time_now = time(0);
 	tm tt;
+
+#ifdef __unix__
+	localtime_r(&tt, &time_now);
+#elif defined(_WIN32) || defined(WIN32)
 	localtime_s(&tt, &time_now);
+#endif
+	
 	return static_cast<UserDatabase::dayIndex>(tt.tm_wday);
 }
 
