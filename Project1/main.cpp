@@ -22,7 +22,7 @@ int main()
 			if (!tokenFile)
 				throw std::runtime_error("Cannot read token from file: File is emtpy?");
 		}
-		BotClient client(token, 2);
+		BotClient client(token);
 		client.run();
 	}
 	catch (std::runtime_error& err)

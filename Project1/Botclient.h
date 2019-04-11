@@ -9,14 +9,15 @@
 
 class BotClient : public SleepyDiscord::DiscordClient 
 {
-	using SleepyDiscord::DiscordClient::DiscordClient;
+public:
+	BotClient(const std::string& token);
 
 public:
 	void onMessage(SleepyDiscord::Message message) override;
 
 private:
 	UserDatabase userDatabase;
-	MessageParser parser;
 	ResetTimer resetTimer;
 	MessageHistory messageHistoryManager;
+	MessageParser parser;
 };
