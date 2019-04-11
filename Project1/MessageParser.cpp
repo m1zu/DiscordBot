@@ -234,7 +234,7 @@ std::string MessageParser::getCommandList() const
 		+ UserDatabase::extendString("", commandBuffer)							+ "(syntax: removeAdmin <memberName>)\\n"
 		+ UserDatabase::extendString("- reset/resetList", commandBuffer)		+ "reset the attendance list\\n\\n"
 		+ UserDatabase::extendString("", commandBuffer)							+ "! automatic reset Saturday->Sunday(local time)\\n\\n"
-		+ UserDatabase::extendString("", commandBuffer)							+ "#ParanoidBot V1.02"
+		+ UserDatabase::extendString("", commandBuffer)							+ "#ParanoidBot V1.03"
 		+ "```"
 	);
 }
