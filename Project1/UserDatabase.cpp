@@ -153,6 +153,54 @@ std::string UserDatabase::getFormatedAttendanceList()
 	return	UserDatabase::to_discordCodeBlock_md(output);
 }
 
+std::string UserDatabase::getFormatedAttendanceSingleUser(const std::string & discordID_in)
+{
+	//Header 
+//name 16Slots + weekday10Slots
+	int daybuffer = 10;
+	int namebuffer = 18;
+	std::string output =
+		extendString("Member", namebuffer)
+		+ extendString("Sunday", daybuffer)
+		+ extendString("Monday", daybuffer)
+		+ extendString("Tuesday", daybuffer)
+		+ extendString("Wednesday", daybuffer)
+		+ extendString("Thursday", daybuffer)
+		+ extendString("Friday", daybuffer)
+		+ extendString("Saturday", daybuffer) + "\\n\\n";
+
+	auto it = std::find_if(user.begin(), user.end(), [&](const User& user)
+	{
+		std::string id = user.discordID;
+		return id == discordID_in;
+	});
+
+	std::string name = it->name;
+	output += extendString(name, namebuffer);
+
+	const std::vector<availableIndex>& av = it->availability;
+	std::for_each(av.begin(), av.end(), [&](const availableIndex index) {
+		switch (index)
+		{
+		case availableIndex::no:
+			output += extendString("* noo *", daybuffer);
+			break;
+		case availableIndex::yes:
+			output += extendString("< yes >", daybuffer);
+			break;
+		case availableIndex::unsure:
+			output += extendString("<maybe>", daybuffer);
+			break;
+		default:
+			output += extendString(".", daybuffer);
+			break;
+		}
+	});
+	output += "\\n";
+
+	return	UserDatabase::to_discordCodeBlock_md(output);
+}
+
 std::string UserDatabase::getFormatedAdminList()
 {
 	std::sort(user.begin(), user.end(), [](User& user1, User& user2)

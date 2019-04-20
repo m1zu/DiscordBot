@@ -97,6 +97,7 @@ public:
 	bool changeAvailability_day(const std::string& discordID, dayIndex day, availableIndex status);
 	bool changeAvailability_week(const std::string& discordID, std::vector<availableIndex> av);
 	std::string getFormatedAttendanceList();
+	std::string getFormatedAttendanceSingleUser(const std::string& discordID);
 	std::string getFormatedAdminList();
 	std::string getReminderMessage() const;
 

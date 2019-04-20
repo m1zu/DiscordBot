@@ -24,7 +24,7 @@ void BotClient::onMessage(SleepyDiscord::Message message)
 		userDatabase.reset();
 		schedule([this, message]() {
 			SleepyDiscord::DiscordClient::sendMessage(message.channelID, userDatabase.getFormatedAttendanceList());
-			SleepyDiscord::DiscordClient::sendMessage(message.channelID, "Adventurers! A new week has come and with it a new way of me annoying you!");
+			SleepyDiscord::DiscordClient::sendMessage(message.channelID, "Adventurers! New week new attendance! @everyone");
 		}, 5000);
 	}
 
@@ -41,8 +41,4 @@ void BotClient::onMessage(SleepyDiscord::Message message)
 		std::cout << err.what();
 		throw;
 	}
-	//if (message.startsWith("!hello"))
-	//	sendMessage(message.channelID, "Hello " + message.author.username);
-	//if (message.startsWith("!pingme"))
-	//	sendMessage(message.channelID, to_personShoutout(message.author.ID));
 }
